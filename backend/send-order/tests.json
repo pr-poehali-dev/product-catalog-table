@@ -1,0 +1,58 @@
+{
+  "tests": [
+    {
+      "name": "Handle OPTIONS request for CORS",
+      "method": "OPTIONS",
+      "path": "/",
+      "expectedStatus": 200,
+      "expectedBody": "",
+      "bodyMatcher": "exact"
+    },
+    {
+      "name": "Send order successfully",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "customerName": "Иван Иванов",
+        "customerEmail": "ivan@example.com",
+        "customerPhone": "+7 (999) 123-45-67",
+        "comment": "Доставка до двери",
+        "items": [
+          {
+            "name": "Матрёшка",
+            "price": 2500,
+            "quantity": 1,
+            "total": 2500
+          },
+          {
+            "name": "Кружка",
+            "price": 850,
+            "quantity": 2,
+            "total": 1700
+          }
+        ],
+        "totalAmount": 4200
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "message": "string",
+        "orderId": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Reject request with missing fields",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "customerName": "Тест",
+        "items": []
+      },
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

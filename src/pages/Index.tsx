@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/ui/icon';
+import Cart from '@/components/Cart';
+import { useToast } from '@/hooks/use-toast';
 
 interface Product {
   id: number;
@@ -11,6 +13,14 @@ interface Product {
   price: number;
   image: string;
   category: string;
+}
+
+interface CartItem {
+  id: number;
+  name: string;
+  price: number;
+  image: string;
+  quantity: number;
 }
 
 const products: Product[] = [
@@ -69,6 +79,8 @@ const categories = ['Все', 'Традиционные', 'Посуда', 'Ак�
 export default function Index() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Все');
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const { toast } = useToast();
 
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -77,16 +89,61 @@ export default function Index() {
     return matchesSearch && matchesCategory;
   });
 
+  const handleAddToCart = (product: Product) => {
+    const existingItem = cartItems.find(item => item.id === product.id);
+    
+    if (existingItem) {
+      setCartItems(cartItems.map(item =>
+        item.id === product.id
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
+      ));
+    } else {
+      setCartItems([...cartItems, {
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        image: product.image,
+        quantity: 1
+      }]);
+    }
+
+    toast({
+      title: 'Товар добавлен',
+      description: `${product.name} добавлен в корзину`,
+    });
+  };
+
+  const handleUpdateQuantity = (id: number, quantity: number) => {
+    setCartItems(cartItems.map(item =>
+      item.id === id ? { ...item, quantity } : item
+    ));
+  };
+
+  const handleRemoveItem = (id: number) => {
+    setCartItems(cartItems.filter(item => item.id !== id));
+    toast({
+      title: 'Товар удалён',
+      description: 'Товар удалён из корзины',
+    });
+  };
+
+  const handleClearCart = () => {
+    setCartItems([]);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-white sticky top-0 z-50">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-3xl font-bold text-foreground">Каталог сувениров</h1>
-            <Button variant="outline" size="sm">
-              <Icon name="ShoppingCart" size={18} className="mr-2" />
-              Корзина
-            </Button>
+            <Cart
+              items={cartItems}
+              onUpdateQuantity={handleUpdateQuantity}
+              onRemoveItem={handleRemoveItem}
+              onClearCart={handleClearCart}
+            />
           </div>
           
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
@@ -157,7 +214,10 @@ export default function Index() {
                     <p className="text-sm text-muted-foreground mb-1">Цена</p>
                     <p className="text-3xl font-bold text-foreground">{product.price.toLocaleString('ru-RU')} ₽</p>
                   </div>
-                  <Button className="w-full md:w-auto">
+                  <Button
+                    className="w-full md:w-auto"
+                    onClick={() => handleAddToCart(product)}
+                  >
                     <Icon name="ShoppingCart" size={18} className="mr-2" />
                     В корзину
                   </Button>
